@@ -17,9 +17,9 @@ E2 = [1 -1; -1 1]/2;
 ka = 1;                                                                     % first wavenumber for testing decomposability
 kb = 2;                                                                     % second wavenumber for testing decomposability
 kC = linspace(0,4,100);                                                     % wavenumbers for computing dispersion curves
-thB = 1e-6;                                                                  % threshold for determining block structure
+thB = 1e-6;                                                                 % threshold for determining block structure
 
-omB=eigencurves_withRepeatedEV(E0,E1,E2,M,ka,kb,kC,thB);                     % call routines for blockdiagonalization and computing eigencurves
+omB=eigencurves_withRepeatedEV(E0,E1,E2,M,ka,kb,kC,thB);                    % call routines for blockdiagonalization and computing eigencurves
 
 %% plot dispersion curves
 % See Figure 3 in the paper
