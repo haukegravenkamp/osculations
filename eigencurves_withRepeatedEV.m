@@ -114,9 +114,11 @@ while iBl <= nBl                                                            % lo
     end
     Phic = Phi(:,ind{iBl});                                                 % eigenvectors of current block
     omB{iBl} = nan(numel(kC),numel(ind{iBl}));                              % allocate frequencies
-    for j=1:numel(kC)                                                       % loop k-values
-        E = matrixFlow(E0,E1,E2,kC(j));                                     % evaluate matrix flow at k
-        Eb =  Phic'*E*Phic;                                                 % current block
+    E0b =  Phic'*E0*Phic;                                                   % current block
+    E1b =  Phic'*E1*Phic;                                                   % current block
+    E2b =  Phic'*E2*Phic;                                                   % current block
+    for j=1:numel(kC)                                                       % loop k-values    
+        Eb = matrixFlow(E0b,E1b,E2b,kC(j));                                 % evaluate matrix flow at k
         if rFlagBlock ...                                                   % if the block previously had repeated EVs
                 && ~(j==1) ...                                              % and it's not the first wavenumber
                 && j<=nAttempt                                              % and we haven't exceeded the allowed number of attempts
@@ -132,7 +134,10 @@ while iBl <= nBl                                                            % lo
                 ind = [ind,indSub{2:end}];                                  % append indices of subblocks
                 ind{iBl} = indSub{1};                                       % update indices of current block
                 nBl = nBl+nBlSub-1;                                         % add nBlSub-1 new blocks
-                Eb =  Phic'*E*Phic;                                         % update matrix flow of current block
+                E0b = Phic'*E0*Phic;                                        % current block
+                E1b = Phic'*E1*Phic;                                        % current block
+                E2b = Phic'*E2*Phic;                                        % current block
+                Eb = matrixFlow(E0b,E1b,E2b,kC(j));                         % evaluate matrix flow at k
                 omB{iBl} = omB{iBl}(:,1:numel(ind{iBl}));                   % remove obsolete columns after block size is reduced
             end
 

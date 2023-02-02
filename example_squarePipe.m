@@ -36,4 +36,5 @@ for i=1:6
     ylabel('$\omega$','FontSize',14)
     ylim([0 10])
 end
+box on
 
