@@ -30,5 +30,5 @@ hold on
 plot(kC,omB{2},'Linewidth',2,'Color',[0.38 0.65 0.75],'DisplayName','$\omega_2$')
 xlabel('$k$','FontSize',14)
 ylabel('$\omega$','FontSize',14)
-legend('Location','southeast','FontSize',12)
+legend('Location','southeast','FontSize',12,'Interpreter','latex')
 ylim([0 4.5])

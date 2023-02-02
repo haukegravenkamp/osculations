@@ -22,15 +22,16 @@ figure
 set(gcf,'defaulttextinterpreter','latex')
 subplot(2,2,1)
 hold all
+box on
 for i=1:numel(SHblocks)
-    hS=plot(kC,real(omB{SHblocks(i)}),'Linewidth',1,'Color',[0.004 0.23 0.4],'DisplayName','SH modes');
+    hS=plot(kC,real(omB{SHblocks(i)}),'Linewidth',2,'Color',[0.004 0.23 0.4],'DisplayName','SH modes');
 end
-legend(hS(1),'Location','southeast','FontSize',12)
+legend(hS(1),'Location','southeast','FontSize',12,'Interpreter','latex')
 
 for i=1:numel(LambBlocks)
     subplot(2,2,i+1)
-    hL=plot(kC,real(omB{LambBlocks(i)}),'Linewidth',1,'Color',[0.004 0.23 0.4],'DisplayName',['block',num2str(i)]);
-    legend(hL(1),'Location','southeast','FontSize',12)
+    hL=plot(kC,real(omB{LambBlocks(i)}),'Linewidth',2,'Color',[0.004 0.23 0.4],'DisplayName',['block',num2str(i)]);
+    legend(hL(1),'Location','southeast','FontSize',12,'Interpreter','latex')
 end
 for i=1:4
     subplot(2,2,i)
@@ -42,8 +43,9 @@ end
 figure
 set(gcf,'defaulttextinterpreter','latex')
 hold all
+box on
 for i=1:numel(omB)
-    hS=plot(kC,real(omB{i}),'Linewidth',1,'Color',[0.004 0.23 0.4],'DisplayName','all blocks');
+    hS=plot(kC,real(omB{i}),'Linewidth',2,'Color',[0.004 0.23 0.4],'DisplayName','all blocks');
 end
 xlabel('$k$','FontSize',14)
 ylabel('$\omega$','FontSize',14)

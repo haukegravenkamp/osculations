@@ -40,5 +40,5 @@ hold on
 h2=plot(kC,real(omB{2}),'Linewidth',2,'Color',[0.38 0.65 0.75],'DisplayName','block 2');
 xlabel('$k$','FontSize',14)
 ylabel('$\omega$','FontSize',14)
-legend([h1(1),h2(1)],'Location','southeast','FontSize',12)
+legend([h1(1),h2(1)],'Location','southeast','FontSize',12,'Interpreter','latex')
 ylim([0 3.5])

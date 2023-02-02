@@ -20,14 +20,14 @@ set(gcf,'defaulttextinterpreter','latex')
 for i=1:numel(omB)
     subplot(3,2,i)
     h=plot(kC,real(omB{i}),'Linewidth',1,'Color',[0.004 0.23 0.4],'DisplayName',['block',num2str(i)]);
-    legend(h(1),'Location','southeast','FontSize',12)
+    legend(h(1),'Location','southeast','FontSize',12,'Interpreter','latex')
 end
 
 subplot(3,2,6)
 hold all
 for i=1:numel(omB)
     h=plot(kC,real(omB{i}),'Linewidth',1,'Color',[0.004 0.23 0.4],'DisplayName','all blocks');
-    legend(h(1),'Location','southeast','FontSize',12)
+    legend(h(1),'Location','southeast','FontSize',12,'Interpreter','latex')
 end
 
 for i=1:6
