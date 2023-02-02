@@ -1,4 +1,11 @@
-%% omB=eigencurves_withRepeatedEV(E0,E1,E2,M,ka,kb,kC,th,nAttempt)
+%% computation of eigencurves utilizing uniform block-diagonalization
+% generalized version, accounting for repeated eigenvalues 
+% 2022-2023 Hauke Gravenkamp, hgravenkamp@cimne.upc.ude
+%
+% Details in the paper (to be published soon):
+% Gravenkamp, H., Plestenjak, B., & Kiefer, D. A. (2023). 
+% 'Notes on osculations and mode tracing in semi-analytical waveguide modeling' 
+%
 % input:
 % E0, E1, E2, M:            coefficient matrices of matrix flow
 % ka (default 1):           k-value for first  decomposition
