@@ -1,14 +1,16 @@
-%% input:
-% E0, E1, E2, M: coefficient matrices of matrix flow
-% ka: k-value for first  decomposition
-% kb: k-value for second decomposition
-% kC: k-values for computing eigencurves
-% th: threshold for determining block structure (significant digits)
+%% omB=eigencurves_withRepeatedEV(E0,E1,E2,M,ka,kb,kC,th,nAttempt)
+% input:
+% E0, E1, E2, M:            coefficient matrices of matrix flow
+% ka (default 1):           k-value for first  decomposition
+% kb (default 2):           k-value for second decomposition
+% kC (default 0:0.1:10):    k-values for computing eigencurves
+% th (default 6):           threshold for determining block structure (significant digits)
+% nAttempt (default 5):     number of attempts to decompose in case of repeated EVs
 
 %% main function
-function omB=eigencurves_withRepeatedEV(E0,E1,E2,M,ka,kb,kC,th)
+function omB=eigencurves_withRepeatedEV(E0,E1,E2,M,varargin)
 
-[E0,E1,E2,M,ka,kb,kC,th,flagInverse] = checkInput(E0,E1,E2,M,ka,kb,kC,th);  % check input for inconsistencies
+[ka,kb,kC,th,flagInverse,nAttempt] = checkInput(varargin{:});               % check input for inconsistencies
 [E0,E1,E2] = generalizedToStandardEVP(E0,E1,E2,M);                          % transform to standard eigenvalue problem
 
 Ea = matrixFlow(E0,E1,E2,ka);                                               % evaluate matrix flow at ka
@@ -17,23 +19,44 @@ Eb = matrixFlow(E0,E1,E2,kb);                                               % ev
 [~,rFlag] = findRepeatedEV(Wa,th);                                          % check for repeated eigenvalues
 
 [ind,nBl] = decompose(Eb,Phi,th);                                           % block decomposition of Eb
-omB = solveBlocks(Phi,E0,E1,E2,ind,nBl,kC,rFlag,th,flagInverse);            % compute eigencurves of blocks
+omB = solveBlocks(Phi,E0,E1,E2,ind,nBl,kC,rFlag,th,flagInverse,nAttempt);   % compute eigencurves of blocks
 
 end
 
 
 %% any conditions we want to require for the input
-function [E0,E1,E2,M,ka,kb,kC,th,flagInverse]=checkInput(E0,E1,E2,M,ka,kb,kC,th)
+function [ka,kb,kC,th,flagInverse,nAttempt]=checkInput(varargin)
 
-if isempty(ka)                                                              % k-value for first decomposition  not given
-    ka = kC(end);                                                           % use last k-value
+nVar = numel(varargin);                                                     % number of optional inputs
+
+% set default values
+if (nVar>0) && ~isempty(varargin{1})
+    ka = varargin{1};
+else
+    ka = 1;
 end
-if isempty(kb)                                                              % k-value for second decomposition  not given
-    ka = mean(kC);                                                          % use average k-value
+if (nVar>1) && ~isempty(varargin{2})
+    kb = varargin{2};
+else
+    kb = 2;
 end
-if (nargin<8)||isempty(th)                                                  % threshold not given
-    th = 6;                                                                 % default six significant digits
+if (nVar>2) && ~isempty(varargin{3})
+    kC = varargin{3};
+else
+    kC = 0:0.1:10;
 end
+if (nVar>3) && ~isempty(varargin{4})
+    th = varargin{4};
+else
+    th = 6;
+end
+if (nVar>4) && ~isempty(varargin{5})
+    nAttempt = varargin{5};
+else
+    nAttempt = 5;
+end
+
+% check if order of k-values should be inverted
 if abs(ka-kC(1)) < 10^(-th)                                                 % if ka is equal to the first requested k-value
     kC = kC(end:-1:1);                                                      % invert order
     flagInverse = true;                                                     % set a flag so we can re-order later
@@ -52,11 +75,9 @@ iM = M^(-0.5);                                                              % M^
 E0 = iM*E0*iM';                                                             % transform E0, E1, E2 accordingly
 E1 = iM*E1*iM';
 E2 = iM*E2*iM';
-E0=1/2*(E0'+E0);        % make hermitian
-E1=1/2*(E1'+E1);        % make hermitian
-E2=1/2*(E2'+E2);        % make hermitian
-
-
+E0 = (E0'+E0)/2;                                                            % enforce Hermitian structure
+E1 = (E1'+E1)/2;                                                            
+E2 = (E2'+E2)/2;                                                            
 
 end
 
@@ -80,7 +101,7 @@ end
 
 %% compute eigencurves for each block
 % this version considers repeated eigenvalues
-function omB=solveBlocks(Phi,E0,E1,E2,ind,nBl,kC,rFlag,th,flagInverse)
+function omB=solveBlocks(Phi,E0,E1,E2,ind,nBl,kC,rFlag,th,flagInverse,nAttempt)
 
 omB{nBl} = [];                                                              % allocate frequencies of all blocks
 iBl = 1;                                                                    % index of current block
@@ -96,7 +117,9 @@ while iBl <= nBl                                                            % lo
     for j=1:numel(kC)                                                       % loop k-values
         E = matrixFlow(E0,E1,E2,kC(j));                                     % evaluate matrix flow at k
         Eb =  Phic'*E*Phic;                                                 % current block
-        if rFlagBlock&&~(j==1)                                                       % if the block previously had repeated EVs
+        if rFlagBlock ...                                                   % if the block previously had repeated EVs
+                && ~(j==1) ...                                              % and it's not the first wavenumber
+                && j<=nAttempt                                              % and we haven't exceeded the allowed number of attempts
             [indSub,nBlSub] = decompose(Eb,PhiB,th);                        % try to decompose block with previous eigenvectors
             if nBlSub>1                                                     % if block can be further decomposed
                 Phi(:,ind{iBl}) = Phic*PhiB;                                % update eigenvectors in global matrix
@@ -109,9 +132,7 @@ while iBl <= nBl                                                            % lo
                 ind = [ind,indSub{2:end}];                                  % append indices of subblocks
                 ind{iBl} = indSub{1};                                       % update indices of current block
                 nBl = nBl+nBlSub-1;                                         % add nBlSub-1 new blocks
-
                 Eb =  Phic'*E*Phic;                                         % update matrix flow of current block
-                %                 Om = eig(Eb,'vector');                                      % compute eigenvalues of first subblock
                 omB{iBl} = omB{iBl}(:,1:numel(ind{iBl}));                   % remove obsolete columns after block size is reduced
             end
 
@@ -119,7 +140,7 @@ while iBl <= nBl                                                            % lo
         end
         [PhiB,Om] = eig(Eb,'vector');                                       % compute eigenvalues and eigenvectors
         if rFlagBlock&&~(j==1) && (nBlSub>1) 
-            [~,rFlagBlock] = findRepeatedEV(Om,th);                     % check if there are still repeated eigenvalues
+            [~,rFlagBlock] = findRepeatedEV(Om,th);                         % check if there are still repeated eigenvalues
         end
         omB{iBl}(j,1:numel(Om)) = sort(sqrt(Om));                           % sort and store square root of eigenvalues
     end                                                                     % end k-loop
