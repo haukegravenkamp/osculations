@@ -9,9 +9,9 @@ load('matrices_layeredPlate.mat');
 ka = 1;                                                                     % first wavenumber for testing decomposability
 kb = 2;                                                                     % second wavenumber for testing decomposability
 kC = linspace(0,4,200);                                                     % wavenumbers for computing dispersion curves
-th = 6;                                                                     % number of significant digits for testing block-structure
+thB = 1e-6;                                                                     % number of significant digits for testing block-structure
 
-omB=eigencurves_withRepeatedEV(E0,E1,E2,M,ka,kb,kC,th);                     % call routines for blockdiagonalization and computing eigencurves
+omB=eigencurves_withRepeatedEV(E0,E1,E2,M,ka,kb,kC,thB);                     % call routines for blockdiagonalization and computing eigencurves
 
 %% plot dispersion curves
 % See Figure 7 in the paper

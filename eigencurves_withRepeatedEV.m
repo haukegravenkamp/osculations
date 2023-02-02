@@ -4,28 +4,29 @@
 % ka (default 1):           k-value for first  decomposition
 % kb (default 2):           k-value for second decomposition
 % kC (default 0:0.1:10):    k-values for computing eigencurves
-% th (default 6):           threshold for determining block structure (significant digits)
+% thB (default 1e-6):       threshold for determining block structure
+% thR (default 1e-6):       threshold for determining whether two eigenvalues are the same
 % nAttempt (default 5):     number of attempts to decompose in case of repeated EVs
 
 %% main function
 function omB=eigencurves_withRepeatedEV(E0,E1,E2,M,varargin)
 
-[ka,kb,kC,th,flagInverse,nAttempt] = checkInput(varargin{:});               % check input for inconsistencies
+[ka,kb,kC,thB,thR,flagInverse,nAttempt] = checkInput(varargin{:});               % check input for inconsistencies
 [E0,E1,E2] = generalizedToStandardEVP(E0,E1,E2,M);                          % transform to standard eigenvalue problem
 
 Ea = matrixFlow(E0,E1,E2,ka);                                               % evaluate matrix flow at ka
 Eb = matrixFlow(E0,E1,E2,kb);                                               % evaluate matrix flow at kb
 [Phi,Wa] = eig(Ea,'vector');                                                % eigenvalue decomposition
-[~,rFlag] = findRepeatedEV(Wa,th);                                          % check for repeated eigenvalues
+[~,rFlag] = findRepeatedEV(Wa,thR);                                          % check for repeated eigenvalues
 
-[ind,nBl] = decompose(Eb,Phi,th);                                           % block decomposition of Eb
-omB = solveBlocks(Phi,E0,E1,E2,ind,nBl,kC,rFlag,th,flagInverse,nAttempt);   % compute eigencurves of blocks
+[ind,nBl] = decompose(Eb,Phi,thB);                                           % block decomposition of Eb
+omB = solveBlocks(Phi,E0,E1,E2,ind,nBl,kC,rFlag,thB,thR,flagInverse,nAttempt);   % compute eigencurves of blocks
 
 end
 
 
 %% any conditions we want to require for the input
-function [ka,kb,kC,th,flagInverse,nAttempt]=checkInput(varargin)
+function [ka,kb,kC,thB,thR,flagInverse,nAttempt]=checkInput(varargin)
 
 nVar = numel(varargin);                                                     % number of optional inputs
 
@@ -46,18 +47,23 @@ else
     kC = 0:0.1:10;
 end
 if (nVar>3) && ~isempty(varargin{4})
-    th = varargin{4};
+    thB = varargin{4};
 else
-    th = 6;
+    thB = 6;
 end
 if (nVar>4) && ~isempty(varargin{5})
-    nAttempt = varargin{5};
+    thR = varargin{5};
+else
+    thR = 1e-6;
+end
+if (nVar>5) && ~isempty(varargin{6})
+    nAttempt = varargin{6};
 else
     nAttempt = 5;
 end
 
 % check if order of k-values should be inverted
-if abs(ka-kC(1)) < 10^(-th)                                                 % if ka is equal to the first requested k-value
+if abs(ka-kC(1)) < thR                                                 % if ka is equal to the first requested k-value
     kC = kC(end:-1:1);                                                      % invert order
     flagInverse = true;                                                     % set a flag so we can re-order later
     % otherwise we would apply the decomposition at ka at the first k in
@@ -87,9 +93,12 @@ E = k^2*E0 - k*E1 + E2;                                                     % ev
 end
 
 %% decomposition of matrix flow E using eigenvectors Phi with accuracy th
-function [ind,nBl]=decompose(E,Phi,th)
+function [ind,nBl]=decompose(E,Phi,thB)
 
-B = round(Phi'*E*Phi,th);                                                   % decompose E
+% B = round(Phi'*E*Phi,thB);                                                   % decompose E
+B = Phi'*E*Phi;
+B(abs(B)/norm(B)<thB)=0;
+
 [p,~,r,~,~,~] = dmperm(B);                                                  % permutation
 nBl = numel(r)-1;                                                           % number of blocks
 ind = cellfun(@(i)p(r(i):r(i+1)-1),num2cell(1:nBl),'UniformOutput',false);  % store block indices
@@ -101,7 +110,7 @@ end
 
 %% compute eigencurves for each block
 % this version considers repeated eigenvalues
-function omB=solveBlocks(Phi,E0,E1,E2,ind,nBl,kC,rFlag,th,flagInverse,nAttempt)
+function omB=solveBlocks(Phi,E0,E1,E2,ind,nBl,kC,rFlag,thB,thR,flagInverse,nAttempt)
 
 omB{nBl} = [];                                                              % allocate frequencies of all blocks
 iBl = 1;                                                                    % index of current block
@@ -122,7 +131,7 @@ while iBl <= nBl                                                            % lo
         if rFlagBlock ...                                                   % if the block previously had repeated EVs
                 && ~(j==1) ...                                              % and it's not the first wavenumber
                 && j<=nAttempt                                              % and we haven't exceeded the allowed number of attempts
-            [indSub,nBlSub] = decompose(Eb,PhiB,th);                        % try to decompose block with previous eigenvectors
+            [indSub,nBlSub] = decompose(Eb,PhiB,thB);                        % try to decompose block with previous eigenvectors
             if nBlSub>1                                                     % if block can be further decomposed
                 Phi(:,ind{iBl}) = Phic*PhiB;                                % update eigenvectors in global matrix
                 Phic = Phic*PhiB(:,indSub{1});                              % update eigenvectors of current block
@@ -145,7 +154,7 @@ while iBl <= nBl                                                            % lo
         end
         [PhiB,Om] = eig(Eb,'vector');                                       % compute eigenvalues and eigenvectors
         if rFlagBlock&&~(j==1) && (nBlSub>1) 
-            [~,rFlagBlock] = findRepeatedEV(Om,th);                         % check if there are still repeated eigenvalues
+            [~,rFlagBlock] = findRepeatedEV(Om,thR);                         % check if there are still repeated eigenvalues
         end
         omB{iBl}(j,1:numel(Om)) = sort(sqrt(Om));                           % sort and store square root of eigenvalues
     end                                                                     % end k-loop
@@ -158,9 +167,10 @@ end                                                                         % en
 end
 
 %% check for repeated eigenvalues
-function [rep,rFlag]=findRepeatedEV(w,th)
+function [rep,rFlag]=findRepeatedEV(w,thR)
 
-[~,IW,IU] = (unique(round(w,th)));                                          % find unique EVs
+% [~,IW,IU] = (unique(round(w,thR)));                                       % find unique EVs
+[~,IW,IU] = uniquetol(w,thR);                                               % find unique EVs
 h = histcounts(IU,numel(IW));                                               % multiplicity of EVs
 iR = find(h>1);                                                             % indices of repeated EVs
 mulMax = max(h);                                                            % maximum multiplicity

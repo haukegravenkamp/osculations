@@ -6,11 +6,11 @@
 % th: threshold for determining block structure (significant digits)
 
 %% main function
-function omB=eigencurves(E0,E1,E2,M,ka,kb,kC,th)
+function omB=eigencurves(E0,E1,E2,M,ka,kb,kC,thB)
 Ea=matrixFlow(E0,E1,E2,ka); % evaluate matrix flow at ka
 [Phi,~]=eig(Ea,M); % eigenvalue decomposition
 Eb=matrixFlow(E0,E1,E2,kb); % evaluate matrix flow at kb
-[ind,nBl]=decompose(Eb,Phi,th); % block decomposition of Eb
+[ind,nBl]=decompose(Eb,Phi,thB); % block decomposition of Eb
 omB=solveBlocks(Phi,E0,E1,E2,M,ind,nBl,kC); % compute eigencurves of blocks
 end
 
@@ -20,8 +20,10 @@ E = k^2*E0 - k*E1 + E2; % evaluate matrix flow
 end
 
 %% decomposition of matrix flow E using eigenvectors Phi with accuracy th
-function [ind,nBl]=decompose(E,Phi,th)
-B=round(Phi'*E*Phi,th); % decompose E
+function [ind,nBl]=decompose(E,Phi,thB)
+% B=round(Phi'*E*Phi,thB); % decompose E
+B = Phi'*E*Phi;
+B(abs(B)/norm(B)<thB)=0;
 [p,~,r,~,~,~] = dmperm(B); % permutation
 nBl = numel(r)-1; % number of blocks
 ind=cellfun(@(i)p(r(i):r(i+1)-1),...
