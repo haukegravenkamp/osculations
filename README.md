@@ -3,10 +3,10 @@
 **Compute dispersion curves of elastic waveguides utilizing uniform block-diagonalization**
 
 These Matlab codes compute the generalized eigenvalues of a matrix function (aka matrix flow) $E(k)$, which corresponds to solving  
-$E(k)\,\phi = \lambda\,M\,\phi$  
-with eigenvector \phi, eigenvalue \lambda, constant matrix $M$, and $E(k)$ is a matrix function depending on one parameter $k$.
+$E(k) \phi = \lambda M \phi$  
+with eigenvector $\phi$, eigenvalue $\lambda$, constant matrix $M$, and $E(k)$ is a matrix function depending on one parameter $k$.
 Specifically, we focus on matrix flows of the polynomial form  
-$E(k)=k^2  E_0 - k\,E_1 + E_2$  
+$E(k) = k^2  E_0 - k E_1 + E_2$  
 and assume the matrix flow to be Hermitian and $M$ nonsingular.  
 
 Other matrix flows can be incorporated by changing the function `matrixFlow.m` as long as these conditions are met.
