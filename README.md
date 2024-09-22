@@ -42,6 +42,9 @@ International Centre for Numerical Methods in Engineering, 08034 Barcelona, Spai
 
 It is based on the joint work with Bor Plestenjak and Daniel Kiefer as described in [1]
 
+This code can also be cited as 
+H. Gravenkamp, (2023), Osculations (v1.0), doi:10.5281/zenodo.7615441, https://github.com/haukegravenkamp/osculations
+
 [![DOI](https://zenodo.org/badge/596309904.svg)](https://zenodo.org/badge/latestdoi/596309904)
 
 
